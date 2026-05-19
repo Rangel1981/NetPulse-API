@@ -1,0 +1,20 @@
+
+version: '3.8'
+
+services:
+  # Nome do nosso serviço de banco de dados
+  postgres_db:
+    image: postgres:16-alpine # Versão leve e estável do Postgres
+    container_name: netpulse_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: arthur_admin
+      POSTGRES_PASSWORD: mangadoce
+      POSTGRES_DB: netpulse_db
+    ports:
+      - "5435:5432" # Mapeia a porta do contêiner para a sua máquina
+    volumes:
+      - postgres_data:/var/lib/postgresql/data # Garante que os dados não somem quando o contêiner desligar
+
+volumes:
+  postgres_data:
