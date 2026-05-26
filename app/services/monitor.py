@@ -1,8 +1,8 @@
-from models import Asset, UptimeLog
+from app.models import Asset, UptimeLog
 import sys
 import asyncio
 from datetime import datetime, timezone
-from sqlalchemy import AsyncSession 
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 class MonitorService:
