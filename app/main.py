@@ -1,10 +1,12 @@
 import asyncio
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
-from app.services.monitor import MonitorService
 
-# import do gerador de sessões assíncronas do teu banco de dados
-# NOTA: Ajusta o import abaixo de acordo com o nome real do teu arquivo de configuração do banco (ex: core.database, database, etc.)
+# Importamos a classe de serviço e o router das rotas
+from app.services.monitor import MonitorService
+from app.routes.asset import router as asset_router
+
+# Gerador de sessões assíncronas do banco de dados
 from app.database import AsyncSessionLocal 
 
 
@@ -26,8 +28,7 @@ async def monitor_task():
         except Exception as e:
             print(f" [NetPulse Erro] Falha crítica no ciclo de monitoramento: {e}")
         
-        # A pausa inteligente que estudaste na documentação!
-        # Liberta o processador para atender os utilizadores da API enquanto espera
+        # A pausa inteligente que liberta o processador para atender os utilizadores
         await asyncio.sleep(30)
 
 
@@ -39,17 +40,16 @@ async def lifespan(app: FastAPI):
     Tudo o que está DEPOIS do 'yield' roda quando o servidor DESLIGA.
     """
     # 1. Quando o servidor liga, criamos a tarefa assíncrona em background
-    # O asyncio.create_task diz ao Python: "Roda isto em paralelo e liberta a rota principal"
     bg_task = asyncio.create_task(monitor_task())
     
     yield  # Aqui é onde a API fica ativa e operacional para os utilizadores
     
-    # 2. Quando o servidor desliga (Ctrl+C), cancelamos a tarefa para não deixar lixo na memória
+    # 2. Quando o servidor desliga (Ctrl+C), cancelamos a tarefa
     print(" [NetPulse] Desligando o servidor, cancelando motor de monitoramento...")
     bg_task.cancel()
 
 
-# Inicializamos o FastAPI passando o nosso interruptor Lifespan
+# INSTÂNCIA ÚNICA DA API: Inicializamos o FastAPI passando todas as configurações de uma vez só!
 app = FastAPI(
     title="NetPulse",
     description="Sistema Assíncrono de Monitorização e Resiliência de Ativos de Rede",
@@ -57,12 +57,14 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# INCLUSÃO DAS ROTAS: Agora elas estão ligadas à instância definitiva do app!
+app.include_router(asset_router)
+
 
 @app.get("/")
 async def root():
     """
-    Rota inicial de teste. Nota que ela responde instantaneamente,
-    provando que o monitor em background não bloqueia a API!
+    Rota inicial de teste.
     """
     return {
         "status": "Online",
